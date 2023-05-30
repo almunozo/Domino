@@ -1,0 +1,114 @@
+mport random
+
+# Función para crear y barajar las fichas del dominó
+def crear_fichas():
+    fichas = []
+    for i in range(7):
+        for j in range(i, 7):
+            fichas.append((i, j))
+    random.shuffle(fichas)
+    return fichas
+
+# Función para encontrar el jugador que inicia el juego
+def encontrar_jugador_inicial(jugadores):
+    for jugador in jugadores:
+        if (6, 6) in jugador:
+            return jugador
+    return None
+
+# Función para validar si una ficha puede ser colocada en la mesa
+def validar_jugada(ficha, mesa):
+    if len(mesa) == 0:
+        return True
+    izquierda, derecha = mesa[0][0], mesa[-1][1]
+    return ficha[0] == izquierda or ficha[1] == izquierda or ficha[0] == derecha or ficha[1] == derecha
+
+# Función para mostrar el estado del juego en pantalla
+def mostrar_estado(jugador, oponentes, mesa):
+    print("Tu turno:")
+    print(jugador)
+    print("Oponentes:")
+    for oponente in oponentes:
+        print(oponente)
+    print("Mesa:", mesa)
+
+# Función para que el jugador humano realice su jugada
+def turno_jugador_humano(jugador, mesa, fichas_jugador):
+    print("Elige una ficha para jugar (indica el número de índice):")
+    for i, ficha in enumerate(fichas_jugador):
+        print(i, ficha)
+    print("O elige 'p' para pasar.")
+    
+    while True:
+        jugada = input("Ingresa tu jugada: ")
+        
+        if jugada == 'p':
+            return None
+        
+        try:
+            indice = int(jugada)
+            ficha_jugada = fichas_jugador[indice]
+            if validar_jugada(ficha_jugada, mesa):
+                fichas_jugador.remove(ficha_jugada)
+                return ficha_jugada
+            else:
+                print("La jugada no es válida. Intenta nuevamente.")
+        except (ValueError, IndexError):
+            print("La entrada no es válida. Intenta nuevamente.")
+
+# Función para que un oponente virtual realice su jugada
+def turno_oponente_virtual(jugador, mesa, fichas_jugador):
+    for ficha in fichas_jugador:
+        if validar_jugada(ficha, mesa):
+            fichas_jugador.remove(ficha)
+            return ficha
+    return None
+
+# Función para jugar una partida completa
+def jugar_dominó():
+    jugadores = [[] for _ in range(4)]
+    fichas = crear_fichas()
+    mesa = []
+    
+    # Repartir las fichas a los jugadores
+    for _ in range(7):
+        for jugador in jugadores:
+            jugador.append(fichas.pop())
+    
+    # Encontrar jugador inicial
+    jugador_inicial = encontrar_jugador_inicial(jugadores)
+    if jugador_inicial is None:
+        print("Ningún jugador tiene el doble seis. El juego no puede comenzar.")
+        return
+    
+    turno = jugadores.index(jugador_inicial)
+    jugador_humano = jugadores[turno]
+    oponentes = jugadores[:turno] + jugadores[turno + 1:]
+    
+    while True:
+        mostrar_estado(jugador_humano, oponentes, mesa)
+        
+        if len(jugador_humano) == 0:
+            print("¡Has ganado!")
+            break
+        
+        if len(oponentes[0]) == 0 or len(oponentes[1]) == 0 or len(oponentes[2]) == 0:
+            print("¡Has perdido!")
+            break
+        
+        if turno == 0:
+            jugada = turno_jugador_humano(jugador_humano, mesa, jugador_humano)
+        else:
+            jugada = turno_oponente_virtual(jugador_humano, mesa, jugador_humano)
+        
+        if jugada is None:
+            print("Has pasado tu turno.")
+        else:
+            mesa.append(jugada)
+        
+        turno = (turno + 1) % 4
+        jugador_humano = jugadores[turno]
+        oponentes = jugadores[:turno] + jugadores[turno + 1:]
+
+# Iniciar el juego de Dominó
+jugar_dominó()
